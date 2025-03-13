@@ -1,80 +1,42 @@
-#!/usr/bin/env python3
 import pyshark
-import csv
-import argparse
+import pandas as pd
 
-def pcap_to_csv(pcap_file, csv_file):
-    # Open the capture (set keep_packets=False to avoid storing all packets in memory)
-    capture = pyshark.FileCapture(pcap_file, keep_packets=False)
+# Function to extract relevant network details from a pcap file
+def extract_pcap_features(pcap_file, output_csv):
+    capture = pyshark.FileCapture(pcap_file)
+    extracted_data = []
     
-    # Define CSV columns – adjust or extend these as needed.
-    fieldnames = [
-        'frame_number', 'frame_time', 'frame_len',
-        'eth_src', 'eth_dst', 'eth_type',
-        'ip_version', 'ip_src', 'ip_dst', 'ip_hl', 'ip_len', 'ip_proto', 'ip_ttl',
-        'tcp_srcport', 'tcp_dstport', 'tcp_seq', 'tcp_ack', 'tcp_len', 'tcp_flags'
-    ]
-    
-    with open(csv_file, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        
-        for packet in capture:
-            row = {}
+    for packet in capture:
+        try:
+            # Extract common network features
+            protocol = packet.highest_layer if hasattr(packet, 'highest_layer') else 'Unknown'
+            packet_length = packet.length if hasattr(packet, 'length') else 'Unknown'
             
-            # Frame layer extraction (Wireshark’s "Frame" details)
-            try:
-                row['frame_number'] = packet.frame_info.number
-                row['frame_time']   = packet.frame_info.time
-                row['frame_len']    = packet.frame_info.len
-            except AttributeError:
-                pass
+            # Extract IP addresses
+            src_ip = packet.ip.src if hasattr(packet, 'ip') else 'Unknown'
+            dst_ip = packet.ip.dst if hasattr(packet, 'ip') else 'Unknown'
             
-            # Ethernet layer extraction
-            if hasattr(packet, 'eth'):
-                try:
-                    row['eth_src']  = packet.eth.src
-                    row['eth_dst']  = packet.eth.dst
-                    row['eth_type'] = packet.eth.type
-                except AttributeError:
-                    pass
+            # Extract MAC addresses (Ethernet layer)
+            src_mac = packet.eth.src if hasattr(packet, 'eth') else 'Unknown'
+            dst_mac = packet.eth.dst if hasattr(packet, 'eth') else 'Unknown'
             
-            # IP layer extraction
-            if hasattr(packet, 'ip'):
-                try:
-                    row['ip_version'] = packet.ip.version
-                    row['ip_src']     = packet.ip.src
-                    row['ip_dst']     = packet.ip.dst
-                    row['ip_hl']      = packet.ip.hdr_len
-                    row['ip_len']     = packet.ip.len
-                    row['ip_proto']   = packet.ip.proto
-                    row['ip_ttl']     = packet.ip.ttl
-                except AttributeError:
-                    pass
+            # Extract Ethernet type
+            eth_type = packet.eth.type if hasattr(packet, 'eth') else 'Unknown'
             
-            # TCP layer extraction
-            if hasattr(packet, 'tcp'):
-                try:
-                    row['tcp_srcport'] = packet.tcp.srcport
-                    row['tcp_dstport'] = packet.tcp.dstport
-                    row['tcp_seq']     = packet.tcp.seq
-                    row['tcp_ack']     = packet.tcp.ack
-                    row['tcp_len']     = packet.tcp.len
-                    row['tcp_flags']   = packet.tcp.flags
-                except AttributeError:
-                    pass
-            
-            writer.writerow(row)
+            extracted_data.append([protocol, packet_length, src_ip, dst_ip, src_mac, dst_mac, eth_type])
+        except AttributeError:
+            continue
     
     capture.close()
-    print(f"CSV file '{csv_file}' has been created from '{pcap_file}'.")
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Extract CSV from a pcap file with detailed layer information"
-    )
-    parser.add_argument("pcap_file", help="Path to the input pcap file")
-    parser.add_argument("csv_file", help="Path for the output CSV file")
-    args = parser.parse_args()
     
-    pcap_to_csv(args.pcap_file, args.csv_file)
+    # Convert to DataFrame
+    df = pd.DataFrame(extracted_data, columns=["Protocol", "Packet Length", "Source IP", "Destination IP", "Source MAC", "Destination MAC", "Ethernet Type"])
+    
+    # Save to CSV
+    df.to_csv(output_csv, index=False)
+    print(f"Extraction complete. Data saved to {output_csv}")
+
+# Example usage
+pcap_file = "./data/kasa-operation.pcap"  # Replace with your actual pcap file
+output_csv = "network_features.csv"
+extract_pcap_features(pcap_file, output_csv)
