@@ -7,18 +7,22 @@ Built as a graduate course project at Illinois State University.
 
 Network traffic from IoT devices is captured as PCAP files, converted to structured CSV features, and fed into a Random Forest classifier. The model identifies which type of IoT device generated a given traffic pattern.
 
-SMOTE (Synthetic Minority Over-sampling Technique) was applied to handle class imbalance in the training data. Results are compared with and without SMOTE to demonstrate the impact on classification performance.
+SMOTE (Synthetic Minority Over-sampling Technique) was applied to handle class imbalance in the training data. The earlier version below compares results with and without SMOTE.
 
 ## Results
 
-Results from the classification reports below (17 device classes, Random Forest).
+**Final result: 94% accuracy across 5 device types**, using 22 engineered statistical and behavioral features over 20,000+ network records, evaluated after fixing a labeling bug that had inflated earlier results.
 
-| Condition | Accuracy | Macro F1 | What changed |
-|---|---|---|---|
-| Without SMOTE | 90% | 0.79 | Strong on common devices; weak on rare ones (e.g. Blipcare recall 0.25) |
-| With SMOTE | 87% | 0.67 | Recall on rare devices went up (Blipcare 0.25 → 0.50), but their precision dropped sharply |
+> The code for the final 94% evaluation is not in this repository yet. The scripts and screenshots below are from an earlier version of the project.
 
-SMOTE traded overall accuracy for better recall on rare device types.
+### Earlier version (code in this repo)
+
+This version used 4 features (frame length, inter-arrival time, EtherType, source MAC) across 17 device classes.
+
+| Condition | Accuracy | Macro F1 |
+|---|---|---|
+| Without SMOTE | 90% | 0.79 |
+| With SMOTE | 87% | 0.67 |
 
 **Classification Report — without SMOTE**  
 ![Result without SMOTE](16-09-23-result%20without%20SMOTE.png)
