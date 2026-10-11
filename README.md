@@ -11,10 +11,17 @@ SMOTE (Synthetic Minority Over-sampling Technique) was applied to handle class i
 
 ## Results
 
-| Condition | Result |
-|---|---|
-| Without SMOTE | See confusion matrix below |
-| With SMOTE | 100% classification accuracy across all device categories |
+Results from the classification reports below (17 device classes, Random Forest).
+
+| Condition | Accuracy | Macro F1 | What changed |
+|---|---|---|---|
+| Without SMOTE | 90% | 0.79 | Strong on common devices; weak on rare ones (e.g. Blipcare recall 0.25) |
+| With SMOTE | 87% | 0.67 | Recall on rare devices went up (Blipcare 0.25 → 0.50), but their precision dropped sharply |
+
+SMOTE traded overall accuracy for better recall on rare device types.
+
+**Classification Report — without SMOTE**  
+![Result without SMOTE](16-09-23-result%20without%20SMOTE.png)
 
 **Confusion Matrix — without SMOTE**  
 ![Confusion Matrix without SMOTE](16-09-23-Confusion%20Matrix%20without%20SMOTE.png)
@@ -23,7 +30,7 @@ SMOTE (Synthetic Minority Over-sampling Technique) was applied to handle class i
 ![Confusion Matrix with SMOTE](16-09-23-Confusion%20Matrix%20with%20SMOTE.png)
 
 **Classification Report — with SMOTE**  
-![Result with SMOTE](16-09-23-result%20with%20SMOTE.png)
+![Result with SMOTE](16-09-23-result%20with%20SMOTE+%20Report%20-%201.png)
 
 ## Pipeline
 
